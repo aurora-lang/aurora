@@ -1,0 +1,6 @@
+fn main(argc, argv) -> void 
+    let var = "10"
+end
+
+let var = "10"
+add(10, 10)
