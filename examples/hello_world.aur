@@ -1,6 +1,3 @@
-fn main(argc, argv) -> void 
-    let var = "10"
+fn main(argc: int, argv: array[string]) -> void 
+    println("Hello, wolrd")
 end
-
-let var = "10"
-add(10, 10)
