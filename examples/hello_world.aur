@@ -1,3 +1,1 @@
-fn main(argc: int, argv: array[string]) -> void 
-    println("Hello, wolrd")
-end
+let xsdsdas: str = "Hello world"

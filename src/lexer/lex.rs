@@ -22,7 +22,7 @@ impl Lexer {
             if token == tokens::Token::EOF {
                 break;
             } else {
-                if token != tokens::Token::Whitespace {
+                if token != tokens::Token::Whitespace && token != tokens::Token::Unkown {
                     tokens.push(token);
                 }
             }
@@ -31,7 +31,7 @@ impl Lexer {
     }
     pub fn read_char(&mut self) {
         if self.read_position >= self.input.len() {
-            self.ch = '0';
+            self.ch = '\0';
         } else {
             self.ch = self.input[self.read_position];
         }
@@ -115,7 +115,7 @@ impl Lexer {
             '}' => {
                 tok = tokens::Token::RBrace { val: self.ch };
             }
-            '0' => {
+            '\0' => {
                 tok = tokens::Token::EOF;
             }
             _ if self.ch == '"' => {

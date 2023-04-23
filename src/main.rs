@@ -1,6 +1,6 @@
 use error::{CompilerError, CompilerErrorKind};
 use lexer::Lexer;
-// use parser::Parser;
+use parser::parser::Parser;
 use std::{
     env::{self},
     fs,
@@ -9,13 +9,20 @@ use std::{
 mod ast;
 mod error;
 mod lexer;
+mod parser;
 
 fn compile(input: String, output: String) {
     let code = fs::read_to_string(input).unwrap();
     let mut _lexer = Lexer::new(code.chars().collect());
-    for token in _lexer.lex() {
-        println!("{token:?}");
+    // for token in &_lexer.lex() {
+    //     println!("{token:?}");
+    // }
+    let mut _parser = Parser::new(_lexer);
+    for statement in &_parser.parse() {
+        println!("{statement:?}");
     }
+    
+
     println!("output: {output}")
 }
 
