@@ -1,3 +1,4 @@
+use ast::statements::Statements;
 use error::{CompilerError, CompilerErrorKind};
 use lexer::Lexer;
 use parser::parser::Parser;
@@ -14,12 +15,15 @@ mod parser;
 fn compile(input: String, output: String) {
     let code = fs::read_to_string(input).unwrap();
     let mut _lexer = Lexer::new(code.chars().collect());
-    // for token in &_lexer.lex() {
-    //     println!("{token:?}");
-    // }
     let mut _parser = Parser::new(_lexer);
-    for statement in &_parser.parse() {
-        println!("{statement:?}");
+
+    for statement in _parser.parse() {
+        if matches!(statement, Statements::ModuleDeclation { .. }) {
+            match statement {
+                Statements::ModuleDeclation { name } => println!("{name}"),
+                _ => panic!("")
+            }
+        }
     }
     
 
@@ -37,7 +41,6 @@ fn main() -> Result<(), CompilerError> {
     };
 
     let mut output: String = "a.out".to_string();
-    let mut input: String = String::default();
 
     if args.len() < 2 {
         return Err(CompilerError {
@@ -48,7 +51,7 @@ fn main() -> Result<(), CompilerError> {
     }
 
     let mut pos: usize = 0;
-    input = (&args.clone()[pos + 1]).to_owned();
+    let input = (&args.clone()[pos + 1]).to_owned();
     for arg in &args {
         if arg == "--output" || arg == "-o" {
             let o = &args.clone()[pos + 1];

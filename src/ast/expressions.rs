@@ -6,6 +6,4 @@ pub enum Expression {
     BooleanLiteral { val: bool },
     FloatLiteral { val: f64 },
     FunctionCall { name: String, params: Vec<Expression> },
-    Sep(char),
-    Skip
 }

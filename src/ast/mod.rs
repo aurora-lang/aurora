@@ -4,7 +4,7 @@ use regex::Regex;
 
 
 #[derive(Debug, Clone)]
-pub struct  FuncParam {
+pub struct FuncParam {
     pub name: String,
     pub r#type: Type
 }

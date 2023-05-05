@@ -1,4 +1,4 @@
-use super::{expressions::Expression, Type, FuncParam};
+use super::{expressions::Expression, Type};
 
 
 #[derive(Debug, Clone)]
@@ -8,9 +8,12 @@ pub enum Statements {
         value: Expression,
         r#type: Type
     },
-    FunctionDeclation {
-        name: String,
-        params: Vec<FuncParam>,
-        return_type: Type
-    }
+    ModuleDeclation {
+        name: String
+    },
+    // FunctionDeclation {
+    //     name: String,
+    //     params: Vec<FuncParam>,
+    //     return_type: Type
+    // }
 }

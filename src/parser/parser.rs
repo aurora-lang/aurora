@@ -1,5 +1,3 @@
-use std::string;
-
 use crate::{
     ast::{expressions::Expression, statements::Statements, Type},
     lexer::{tokens::Token, Lexer},
@@ -19,7 +17,8 @@ impl Parser {
     pub fn parse(&mut self) -> Vec<Statements> {
         let mut program: Vec<Statements> = vec![];
 
-        while let curr_token = self.lexer.next_token() {
+        loop {
+            let curr_token = self.lexer.next_token();
             if matches!(curr_token, Token::EOF) {
                 break;
             }
@@ -48,7 +47,6 @@ impl Parser {
                         Token::Identifier { val } => String::from_iter(val),
                         x => panic!("{:?}", x),
                     };
-                    // self.lexer.next_token();
                     Type::parse_type(raw_type)
                 } else {
                     panic!("expected type")
@@ -61,13 +59,26 @@ impl Parser {
                     self.lexer.next_token()
                 };
 
-
                 let expr = self.parse_expr().unwrap();
                 program.push(Statements::VariableDeclation {
                     name: id,
                     value: expr,
-                    r#type: _type
+                    r#type: _type,
                 })
+            }
+
+            if matches!(curr_token, Token::Module) {
+                let id = if matches!(self.lexer.peak_next_token(), Token::Identifier { .. }) {
+                    self.lexer.next_token();
+                    match self.lexer.next_token() {
+                        Token::Identifier { val } => String::from_iter(val),
+                        _ => panic!("unexpected identifier"),
+                    }
+                } else {
+                    panic!("Expected module name")
+                };
+
+                program.push(Statements::ModuleDeclation { name: id })
             }
         }
 
@@ -79,9 +90,41 @@ impl Parser {
             Token::String { val } => Ok(Expression::StringLiteral {
                 val: String::from_iter(val),
             }),
+            Token::Int { val } => Ok(Expression::IntLiteral {
+                val: String::from_iter(val).parse().unwrap(),
+            }),
+            Token::Float { val } => Ok(Expression::FloatLiteral {
+                val: String::from_iter(val).parse().unwrap(),
+            }),
             Token::False => Ok(Expression::BooleanLiteral { val: false }),
             Token::True => Ok(Expression::BooleanLiteral { val: true }),
-            x => panic!("{:?}", x),
+            Token::Identifier { val } => {
+                let val = String::from_iter(val);
+
+                if matches!(self.lexer.peak_next_token(), Token::LParen { .. }) {
+                    self.lexer.next_token();
+                    let mut params: Vec<Expression> = vec![];
+                    loop {
+                        if matches!(self.lexer.next_token(), Token::EOF) {
+                            break;
+                        }
+                        if matches!(self.lexer.peak_next_token(), Token::RParen { .. }) {
+                            self.lexer.next_token();
+                            break;
+                        }
+                        params.push(self.parse_expr().unwrap());
+                    }
+
+                    return Ok(Expression::FunctionCall { name: val, params });
+                }
+
+                Ok(Expression::Identifier { val })
+            }
+            x => Err(error::Error {
+                code: "AUR3000".to_string(),
+                kind: error::ErrorKind::ExpressionError,
+                message: format!("Unknow implemented token {:?}", x),
+            }),
         }
     }
 }

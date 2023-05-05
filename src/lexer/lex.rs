@@ -1,3 +1,5 @@
+use regex::Regex;
+
 use super::tokens;
 pub struct Lexer {
     pub input: Vec<char>,
@@ -14,6 +16,8 @@ impl Lexer {
             ch: ' ',
         }
     }
+
+    #[cfg(feature = "lex_dbg")]
     pub fn lex(&mut self) -> Vec<tokens::Token> {
         let mut tokens: Vec<tokens::Token> = vec![];
         self.read_char();
@@ -53,8 +57,12 @@ impl Lexer {
             l.input[position..l.position].to_vec()
         };
         let read_number = |l: &mut Lexer| -> Vec<char> {
+            let re = Regex::new(r"^[1-9]\d*(\.\d+)?$").unwrap();
             let position = l.position;
-            while l.position < l.input.len() && l.ch.is_numeric() {
+            let c_str = String::from(l.ch);
+            let c_str = &c_str.as_str();
+
+            while l.position < l.input.len() && re.is_match(c_str) {
                 l.read_char();
             }
             l.input[position..l.position].to_vec()
@@ -145,6 +153,10 @@ impl Lexer {
             }
             _ if self.ch.is_numeric() => {
                 let ident: Vec<char> = read_number(self);
+                if ident.contains(&'.') {
+                    return tokens::Token::Float { val: ident };
+                }
+
                 return tokens::Token::Int { val: ident };
             }
             _ => {

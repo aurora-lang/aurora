@@ -17,6 +17,7 @@ pub enum Token {
     LBrace { val: char },
     RBrace { val: char },
     Int { val: Vec<char> },
+    Float { val: Vec<char> },
     String { val: Vec<char> },
     Arrow { val: String },
     // KEYWORDS
@@ -28,6 +29,7 @@ pub enum Token {
     Else,
     Return,
     End,
+    Module,
     Unkown,
     Whitespace,
     EOF,
@@ -44,6 +46,7 @@ pub fn get_keyword_token(ident: &Vec<char>) -> Result<Token, String> {
         "else" => Ok(Token::Else),
         "end" => Ok(Token::End),
         "return" => Ok(Token::Return),
+        "module" => Ok(Token::Module),
         _ => Err(String::from("Not a keyword")),
     }
 }
