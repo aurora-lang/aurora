@@ -8,3 +8,5 @@ lex_dbg = []
 
 [dependencies]
 regex = "1.7.3"
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm14-0"] }
+cc = "1.0.79"

@@ -1,6 +1,6 @@
-use regex::Regex;
-
 use super::tokens;
+
+#[derive(Debug, Clone)]
 pub struct Lexer {
     pub input: Vec<char>,
     pub position: usize,
@@ -17,7 +17,7 @@ impl Lexer {
         }
     }
 
-    #[cfg(feature = "lex_dbg")]
+    #[cfg(feature = "debug")]
     pub fn lex(&mut self) -> Vec<tokens::Token> {
         let mut tokens: Vec<tokens::Token> = vec![];
         self.read_char();
@@ -33,6 +33,7 @@ impl Lexer {
         }
         tokens
     }
+
     pub fn read_char(&mut self) {
         if self.read_position >= self.input.len() {
             self.ch = '\0';
@@ -57,14 +58,17 @@ impl Lexer {
             l.input[position..l.position].to_vec()
         };
         let read_number = |l: &mut Lexer| -> Vec<char> {
-            let re = Regex::new(r"^[1-9]\d*(\.\d+)?$").unwrap();
             let position = l.position;
-            let c_str = String::from(l.ch);
-            let c_str = &c_str.as_str();
 
-            while l.position < l.input.len() && re.is_match(c_str) {
-                l.read_char();
+            while l.position < l.input.len() {
+
+                if l.ch.is_numeric() || l.ch == '.' {
+                    l.read_char();
+                } else {
+                    break;
+                }
             }
+
             l.input[position..l.position].to_vec()
         };
         let tok: tokens::Token;
@@ -175,7 +179,10 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> tokens::Token {
-        let t = self.token_match();
+        let mut t = self.token_match();
+        if matches!(t, tokens::Token::Whitespace) {
+            t = self.token_match()
+        }
         t
     }
     pub fn peak_next_token(&mut self) -> tokens::Token {

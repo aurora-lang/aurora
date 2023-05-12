@@ -1,19 +1,20 @@
-use super::{expressions::Expression, Type};
+use super::{expressions::Expression, Type, FuncParam};
 
 
 #[derive(Debug, Clone)]
 pub enum Statements {
-    VariableDeclation {
+    VariableDeclaration {
         name: String,
         value: Expression,
         r#type: Type
     },
-    ModuleDeclation {
+    ModuleDeclaration {
         name: String
     },
-    // FunctionDeclation {
-    //     name: String,
-    //     params: Vec<FuncParam>,
-    //     return_type: Type
-    // }
+    FunctionDeclaration {
+        name: String,
+        params: Vec<FuncParam>,
+        body: Vec<Statements>,
+        return_type: Type
+    }
 }
