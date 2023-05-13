@@ -1,8 +1,9 @@
 use inkwell::{
     builder::Builder,
     context::Context,
-    module::{Linkage, Module},
+    module::Module,
     targets::{CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine},
+    types::BasicMetadataTypeEnum,
     AddressSpace, OptimizationLevel,
 };
 
@@ -33,17 +34,83 @@ impl<'ctx> LLVMContext<'ctx> {
             Statements::FunctionDeclaration {
                 name,
                 params,
-                body,
                 return_type,
+                ..
             } => {
+                let params_len: usize = params.len();
+                let mut fn_params: Vec<BasicMetadataTypeEnum> = Vec::with_capacity(params_len);
+                let mut void: bool = false;
 
-                // let params_len = params.len();
 
-                // let fn_type = i32_type.fn_type(&[i32_type.into(), i32_type.into()], false);
-                // let fn_val = module.add_function("add", fn_type, None);
-                // let entry_basic_block = self.context.append_basic_block(fn_val, "entry");
+                for param in params {
+                    match param.r#type {
+                        // Ints
+                        super::Type::Int8 => {
+                            fn_params.push(BasicMetadataTypeEnum::IntType(self.context.i8_type()))
+                        }
+                        super::Type::Int16 => {
+                            fn_params.push(BasicMetadataTypeEnum::IntType(self.context.i16_type()))
+                        }
+                        super::Type::Int32 => {
+                            fn_params.push(BasicMetadataTypeEnum::IntType(self.context.i32_type()))
+                        }
+                        super::Type::Int64 => {
+                            fn_params.push(BasicMetadataTypeEnum::IntType(self.context.i64_type()))
+                        }
+                        super::Type::Int128 => {
+                            fn_params.push(BasicMetadataTypeEnum::IntType(self.context.i128_type()))
+                        }
+                        // Floats
+                        super::Type::Float16 => fn_params
+                            .push(BasicMetadataTypeEnum::FloatType(self.context.f16_type())),
+                        super::Type::Float32 => fn_params
+                            .push(BasicMetadataTypeEnum::FloatType(self.context.f32_type())),
+                        super::Type::Float64 => fn_params
+                            .push(BasicMetadataTypeEnum::FloatType(self.context.f64_type())),
+                        super::Type::Float128 => fn_params
+                            .push(BasicMetadataTypeEnum::FloatType(self.context.f128_type())),
+                        super::Type::String => fn_params.push(BasicMetadataTypeEnum::PointerType(
+                            self.context.i8_type().ptr_type(AddressSpace::default()),
+                        )),
+                        super::Type::Void => void = true,
+                        super::Type::Boolean => todo!(),
+                        super::Type::Array(_) => todo!(),
+                        super::Type::UserDefinedType { .. } => todo!(),
+                    }
+                }
 
-                // self.module.add_function(&name, ty, None);
+                let params = fn_params.as_slice();
+
+                let fn_type = if void {
+                    match return_type {
+                        // Ints
+                        super::Type::Int8 => self.context.i8_type().fn_type(params, false),
+                        super::Type::Int16 => self.context.i16_type().fn_type(params, false),
+                        super::Type::Int32 => self.context.i32_type().fn_type(params, false),
+                        super::Type::Int64 => self.context.i64_type().fn_type(params, false),
+                        super::Type::Int128 => self.context.i128_type().fn_type(params, false),
+                        // Floats
+                        super::Type::Float16 => self.context.f16_type().fn_type(params, false),
+                        super::Type::Float32 => self.context.f32_type().fn_type(params, false),
+                        super::Type::Float64 => self.context.f64_type().fn_type(params, false),
+                        super::Type::Float128 => self.context.f128_type().fn_type(params, false),
+                        super::Type::String => self
+                            .context
+                            .i8_type()
+                            .ptr_type(AddressSpace::default())
+                            .fn_type(params, false),
+                        super::Type::Void => self.context.void_type().fn_type(params, false),
+                        super::Type::Boolean => todo!(),
+                        super::Type::Array(_) => todo!(),
+                        super::Type::UserDefinedType { .. } => todo!(),
+                    }
+                } else {
+                    self.context.void_type().fn_type(params, false)
+                };
+
+                let fn_val = self.module.add_function(name.as_str(), fn_type, None);
+                let basic_block = self.context.append_basic_block(fn_val, "last");
+                // self.builder.position_at_end(basic_block);
             }
             _ => unreachable!(),
         }
@@ -80,20 +147,6 @@ impl<'ctx> LLVMContext<'ctx> {
             .map_err(|e| format!("{:?}", e))
             .unwrap();
     }
-
-    pub fn temp(&self) {
-        let i32_type = self.context.i32_type();
-        let main_fn_type = i32_type.fn_type(&[], false);
-        let main_fn = self
-            .module
-            .add_function("main", main_fn_type, Some(Linkage::External));
-
-        let basic_block = self.context.append_basic_block(main_fn, "entry");
-        self.builder.position_at_end(basic_block);
-
-        let i32_zero = i32_type.const_int(69, false);
-        self.builder.build_return(Some(&i32_zero));
-    }
 }
 
 pub struct Program {
@@ -106,15 +159,15 @@ impl Program {
     }
 
     pub fn generate(&self, ctx: &LLVMContext, output: String) {
-        // for ins in &self.ast {
-        //     match ins {
-        //         Statements::VariableDeclaration { .. } => ctx.create_var(ins.clone()),
-        //         Statements::ModuleDeclaration { .. } => todo!(),
-        //         Statements::FunctionDeclaration { .. } => ctx.create_function(ins.clone()),
-        //     }
-        // }
+        for ins in &self.ast {
+            match ins {
+                Statements::VariableDeclaration { .. } => ctx.create_var(ins.clone()),
+                Statements::ModuleDeclaration { .. } => todo!(),
+                Statements::FunctionDeclaration { .. } => ctx.create_function(ins.clone()),
+            }
+        }
 
-        ctx.temp();
+        // ctx.temp();
 
         ctx.build(output)
     }

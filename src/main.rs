@@ -19,7 +19,6 @@ mod parser;
 fn compile(input: String, output: String) {
     let code = fs::read_to_string(input).unwrap();
     let mut _lexer = Lexer::new(code.chars().collect());
-    // println!("{:?}", _lexer.lex());
     let mut _parser = Parser::new(_lexer.clone());
     let mut m_name: String = String::new();
 
@@ -34,6 +33,8 @@ fn compile(input: String, output: String) {
         }
     }
 
+    println!("{:#?}", ast);
+
     let context = Context::create();
     let module = context.create_module(&m_name);
 
@@ -45,15 +46,15 @@ fn compile(input: String, output: String) {
 
     let program = Program::init(ast);
 
-    program.generate(&llvm, format!("{}.obj", output));
+    // program.generate(&llvm, format!("{}.obj", output));
 
-    cc::Build::new()
-        .file(format!("{}.obj", output))
-        .target(&llvm.module.get_triple().to_string())
-        .opt_level(2)
-        .host("x86_64-linux-gnu")
-        .out_dir("./")
-        .compile(&output);
+    // cc::Build::new()
+        // .file(format!("{}.obj", output))
+        // .target(&llvm.module.get_triple().to_string())
+    //     .opt_level(2)
+    //     .host("x86_64-linux-gnu")
+    //     .out_dir("./")
+    //     .compile(&output);
 }
 
 fn main() -> Result<(), CompilerError> {

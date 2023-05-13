@@ -173,13 +173,27 @@ impl Parser {
                 })
             }
 
+            if matches!(self.lexer.peak_next_token(), Token::Arrow { .. }) {
+                self.lexer.next_token();
+            }
+
+            let ret_type = if matches!(self.lexer.peak_next_token(), Token::Identifier { .. }) {
+                let raw_type = match self.lexer.next_token() {
+                    Token::Identifier { val } => String::from_iter(val),
+                    x => panic!("{:?}", x),
+                };
+                Type::parse_type(raw_type)
+            } else {
+                Type::Void
+            };
+
             let body = self.parse_block();
 
             return Ok(Statements::FunctionDeclaration {
                 name: id,
                 params: parameters,
                 body,
-                return_type: Type::Int32,
+                return_type: ret_type,
             });
         }
 

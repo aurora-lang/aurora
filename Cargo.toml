@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-lex_dbg = []
+debug = []
 
 [dependencies]
 regex = "1.7.3"
