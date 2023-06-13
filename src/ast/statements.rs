@@ -1,7 +1,9 @@
+use serde::{Serialize, Deserialize};
+
 use super::{expressions::Expression, Type, FuncParam};
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Statements {
     VariableDeclaration {
         name: String,
@@ -16,5 +18,8 @@ pub enum Statements {
         params: Vec<FuncParam>,
         body: Vec<Statements>,
         return_type: Type
+    },
+    ExpressionStatement {
+        expr: Expression
     }
 }

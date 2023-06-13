@@ -1,15 +1,15 @@
 pub mod expressions;
-pub mod llvm;
 pub mod statements;
 use regex::Regex;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuncParam {
     pub name: String,
     pub r#type: Type,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Type {
     Int8,
     Int16,
@@ -25,6 +25,33 @@ pub enum Type {
     Void,
     Array(Box<Type>),
     UserDefinedType { name: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Program {
+    statements: Vec<statements::Statements>,
+    exports: Vec<Export>,
+}
+
+impl Program {
+    pub fn compile(app: (Vec<statements::Statements>, Vec<Export>)) -> Self {
+        Self {
+            statements: app.0,
+            exports: app.1
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ExportType {
+    Const,
+    Function,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Export {
+    pub r#type: ExportType,
+    pub statement: statements::Statements
 }
 
 impl Type {
@@ -65,3 +92,5 @@ impl Type {
         }
     }
 }
+
+

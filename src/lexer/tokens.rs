@@ -1,4 +1,6 @@
-#[derive(PartialEq, Debug, Clone)]
+use serde::{Serialize, Deserialize};
+
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum Token {
     Identifier { val: Vec<char> },
     Plus { val: char },
@@ -31,6 +33,7 @@ pub enum Token {
     End,
     Module,
     Unkown,
+    Public,
     Whitespace,
     EOF,
 }
@@ -47,6 +50,7 @@ pub fn get_keyword_token(ident: &Vec<char>) -> Result<Token, String> {
         "end" => Ok(Token::End),
         "return" => Ok(Token::Return),
         "module" => Ok(Token::Module),
+        "public" => Ok(Token::Public),  
         _ => Err(String::from("Not a keyword")),
     }
 }

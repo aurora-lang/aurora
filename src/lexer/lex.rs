@@ -4,6 +4,7 @@ use super::tokens;
 pub struct Lexer {
     pub input: Vec<char>,
     pub position: usize,
+    pub line: usize,
     pub read_position: usize,
     pub ch: char,
 }
@@ -12,6 +13,7 @@ impl Lexer {
         Self {
             input: source_code,
             position: 0,
+            line: 0,
             read_position: 0,
             ch: ' ',
         }
@@ -61,7 +63,6 @@ impl Lexer {
             let position = l.position;
 
             while l.position < l.input.len() {
-
                 if l.ch.is_numeric() || l.ch == '.' {
                     l.read_char();
                 } else {
@@ -164,7 +165,13 @@ impl Lexer {
                 return tokens::Token::Int { val: ident };
             }
             _ => {
-                if self.ch == '\n' || self.ch == '\n' || self.ch == ' ' || self.ch == '\r' {
+                if self.ch == '\n' || self.ch == '\n' || self.ch == '\r' {
+                    self.line += 1;
+                    self.position = 0;
+                    // self.read_position = 0;
+                }
+
+                if self.ch == '\n' || self.ch == '\n' || self.ch == '\r' || self.ch == ' ' {
                     return tokens::Token::Whitespace;
                 }
                 eprintln!(

@@ -1,0 +1,59 @@
+{
+  "statements": [
+    {
+      "FunctionDeclaration": {
+        "name": "main",
+        "params": [],
+        "body": [
+          {
+            "VariableDeclaration": {
+              "name": "app",
+              "value": {
+                "FunctionCall": {
+                  "name": "createapp",
+                  "params": []
+                }
+              },
+              "type": {
+                "UserDefinedType": {
+                  "name": "App"
+                }
+              }
+            }
+          }
+        ],
+        "return_type": "Void"
+      }
+    }
+  ],
+  "exports": [
+    {
+      "type": "Function",
+      "statement": {
+        "FunctionDeclaration": {
+          "name": "main",
+          "params": [],
+          "body": [
+            {
+              "VariableDeclaration": {
+                "name": "app",
+                "value": {
+                  "FunctionCall": {
+                    "name": "createapp",
+                    "params": []
+                  }
+                },
+                "type": {
+                  "UserDefinedType": {
+                    "name": "App"
+                  }
+                }
+              }
+            }
+          ],
+          "return_type": "Void"
+        }
+      }
+    }
+  ]
+}

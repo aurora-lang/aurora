@@ -1,23 +1,31 @@
 use crate::{
-    ast::{expressions::Expression, statements::Statements, FuncParam, Type},
+    ast::{expressions::Expression, statements::Statements, Export, ExportType, FuncParam, Type},
+    error::print_error,
     lexer::{tokens::Token, Lexer},
 };
 
 use super::error;
-
 pub struct Parser {
     lexer: Lexer,
+    pub exports: Vec<Export>,
 }
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Self {
-        Self { lexer }
+        Self {
+            lexer,
+            exports: vec![],
+        }
     }
 
     pub fn parse(&mut self) -> Vec<Statements> {
         let mut program: Vec<Statements> = vec![];
+        loop {
+            let statement = match self.parse_statement() {
+                Ok(statement) => statement,
+                Err(_) => break,
+            };
 
-        while let Ok(statement) = self.parse_statement() {
             program.push(statement)
         }
 
@@ -28,30 +36,28 @@ impl Parser {
         let mut block: Vec<Statements> = vec![];
 
         loop {
-            let mut curr_token = self.lexer.next_token();
+            let curr_token = self.lexer.next_token();
 
             if matches!(curr_token, Token::Whitespace) {
-                curr_token = self.lexer.next_token();
+                self.lexer.next_token();
             }
 
-            if matches!(curr_token, Token::End) {
+            if matches!(self.lexer.peak_next_token(), Token::End) {
                 break;
             }
 
-            if let Ok(statement) = self.parse_statement() {
-                block.push(statement);
-            } else {
-                panic!("")
+            match self.parse_statement() {
+                Ok(statement) => block.push(statement),
+                Err(e) => panic!("{e}"),
             }
         }
-
-        self.lexer.next_token();
 
         block
     }
 
-    fn parse_statement(&mut self) -> Result<Statements, String> {
+    pub fn parse_statement(&mut self) -> Result<Statements, String> {
         let mut curr_token = self.lexer.next_token();
+        let mut public = false;
 
         if matches!(curr_token, Token::Whitespace) {
             curr_token = self.lexer.next_token();
@@ -61,7 +67,11 @@ impl Parser {
             return Err("Reached end of file".to_string());
         }
 
-        // Variable Declaration
+        if matches!(curr_token, Token::Public) {
+            public = true;
+            curr_token = self.lexer.next_token();
+        }
+
         if matches!(curr_token, Token::Let) {
             let id = if matches!(self.lexer.peak_next_token(), Token::Identifier { .. }) {
                 match self.lexer.next_token() {
@@ -69,11 +79,11 @@ impl Parser {
                     _ => panic!("unexpected identifier"),
                 }
             } else {
-                panic!("Expected an identifier")
+                panic!("{}", print_error("Expected an identifier", &self.lexer))
             };
 
             if !matches!(self.lexer.peak_next_token(), Token::Colon { .. }) {
-                panic!("Expected ':'")
+                panic!("{}", print_error("Expected ':'", &self.lexer))
             } else {
                 self.lexer.next_token();
                 self.lexer.next_token();
@@ -86,11 +96,14 @@ impl Parser {
                 };
                 Type::parse_type(raw_type)
             } else {
-                panic!("expected type")
+                panic!("{}", print_error("expected type", &self.lexer))
             };
 
             if !matches!(self.lexer.peak_next_token(), Token::Assign { .. }) {
-                panic!("Expected assignment operoator '='")
+                panic!(
+                    "{}",
+                    print_error("Expected assignment operoator '='", &self.lexer)
+                )
             } else {
                 self.lexer.next_token();
             };
@@ -101,8 +114,7 @@ impl Parser {
                 value: expr,
                 r#type: _type,
             });
-        }
-
+        } else
         // Module Declaration
         if matches!(curr_token, Token::Module) {
             let id = if matches!(self.lexer.peak_next_token(), Token::Identifier { .. }) {
@@ -115,8 +127,7 @@ impl Parser {
             };
 
             return Ok(Statements::ModuleDeclaration { name: id });
-        }
-
+        } else
         // Function Declaration
         if matches!(curr_token, Token::Function) {
             let id = if matches!(self.lexer.peak_next_token(), Token::Identifier { .. }) {
@@ -125,15 +136,16 @@ impl Parser {
                     _ => panic!("unexpected identifier"),
                 }
             } else {
-                panic!("Expected an identifier")
+                panic!("{}", print_error("Expected an identifier", &self.lexer))
             };
 
             if !matches!(self.lexer.next_token(), Token::LParen { .. }) {
-                panic!("expected '('");
+                panic!("{}", print_error("expected '('", &self.lexer));
             }
 
             let mut parameters: Vec<FuncParam> = vec![];
 
+            // handle function patams
             loop {
                 let mut curr_tk = self.lexer.next_token();
 
@@ -189,18 +201,29 @@ impl Parser {
 
             let body = self.parse_block();
 
-            return Ok(Statements::FunctionDeclaration {
+            let func = Statements::FunctionDeclaration {
                 name: id,
                 params: parameters,
                 body,
                 return_type: ret_type,
-            });
-        }
+            };
 
-        Err("Unknown keyword found".to_string())
+            if public {
+                self.exports.push(Export {
+                    r#type: ExportType::Function,
+                    statement: func.clone(),
+                })
+            }
+
+            return Ok(func);
+        } else if let Ok(expr) = self.parse_expr() {
+            Ok(Statements::ExpressionStatement { expr })
+        } else {
+            return Err(format!("Unknown keyword found: {:#?}", curr_token));
+        }
     }
 
-    fn parse_expr(&mut self) -> Result<Expression, error::Error> {
+    pub fn parse_expr(&mut self) -> Result<Expression, error::Error> {
         match self.lexer.next_token() {
             Token::String { val } => Ok(Expression::StringLiteral {
                 val: String::from_iter(val),
@@ -226,6 +249,8 @@ impl Parser {
                     self.lexer.next_token();
                     self.lexer.next_token();
 
+                    let mut params: Vec<Expression> = vec![];
+
                     loop {
                         if matches!(self.lexer.peak_next_token(), Token::EOF) {
                             return Err(error::Error {
@@ -242,20 +267,23 @@ impl Parser {
 
                         if matches!(self.lexer.peak_next_token(), Token::Comma { .. }) {
                             self.lexer.next_token();
+                            self.lexer.next_token();
                         }
 
-                        println!("{:?}", self.lexer.next_token())
+                        params.push(self.parse_expr().unwrap());
                     }
 
-                    return Ok(Expression::FunctionCall {
-                        name: val,
-                        params: vec![],
-                    });
+                    return Ok(Expression::FunctionCall { name: val, params });
                 }
 
                 Ok(Expression::Identifier { val })
             }
-            _ => unreachable!(),
+
+            x => Err(error::Error {
+                code: "AUR7000".to_string(),
+                kind: error::ErrorKind::ExpressionError,
+                message: print_error(&format!("can not parse this token {:#?}", x), &self.lexer),
+            }),
         }
     }
 }
