@@ -1,3 +1,4 @@
+use aurorac_macros::generate_params;
 use inkwell::{
     context::ContextRef,
     module::Module,
@@ -5,6 +6,26 @@ use inkwell::{
 };
 
 use crate::ast::{statements::Statements, FuncParam, Type};
+
+pub fn get_param_type(r#type: Type) -> String {
+    match r#type {
+        Type::Int8 => "into_int_value",
+        Type::Int16 => "into_int_value",
+        Type::Int32 => "into_int_value",
+        Type::Int64 => "into_int_value",
+        Type::Int128 => "into_int_value",
+        Type::Float16 => "into_float_value",
+        Type::Float32 => "into_float_value",
+        Type::Float64 => "into_float_value",
+        Type::Float128 => "into_float_value",
+        Type::String => todo!(),
+        Type::Boolean => "into_int_value",
+        Type::Void => unreachable!(),
+        Type::Array(_) => "into_array_value",
+        Type::UserDefinedType { name } => todo!(),
+    }
+    .to_string()
+}
 
 pub fn get_function_params<'a>(
     params: Vec<FuncParam>,
@@ -99,13 +120,22 @@ impl CodeGen {
             } => {
                 let ctx = r#mod.get_context();
 
-                let params = get_function_params(params, &ctx);
-                let fn_type = get_function_type(return_type, params, &ctx);
+                let fn_params = get_function_params(params.clone(), &ctx);
+                let fn_type = get_function_type(return_type, fn_params, &ctx);
                 let fn_val = r#mod.add_function(&name, fn_type, None);
                 let entry_basic_block = ctx.append_basic_block(fn_val, "entry");
 
                 let builder = ctx.create_builder();
                 builder.position_at_end(entry_basic_block);
+
+                let mut curr_param = 0;
+                for param in params {
+                    let FuncParam { name, r#type } = param;
+                    let param_type = r#type.to();
+                    let param_type = get_param_type(Type::parse_type(param_type.to_string()));
+                    generate_params!(name curr_param param_type);
+                    curr_param += 1;
+                }
 
                 let x = fn_val.get_nth_param(0).unwrap().into_int_value();
                 let y = fn_val.get_nth_param(1).unwrap().into_int_value();

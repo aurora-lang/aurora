@@ -15,10 +15,18 @@ dependencies = [
 name = "aurorac"
 version = "0.1.0"
 dependencies = [
+ "aurorac_macros",
  "inkwell",
  "regex",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "aurorac_macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
 ]
 
 [[package]]

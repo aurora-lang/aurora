@@ -1,7 +1,7 @@
 pub mod expressions;
 pub mod statements;
 use regex::Regex;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuncParam {
@@ -37,7 +37,7 @@ impl Program {
     pub fn compile(app: (Vec<statements::Statements>, Vec<Export>)) -> Self {
         Self {
             statements: app.0,
-            exports: app.1
+            exports: app.1,
         }
     }
 }
@@ -51,7 +51,7 @@ pub enum ExportType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Export {
     pub r#type: ExportType,
-    pub statement: statements::Statements
+    pub statement: statements::Statements,
 }
 
 impl Type {
@@ -91,6 +91,23 @@ impl Type {
             }
         }
     }
+
+    pub fn to(self) -> &'static str {
+        match &self {
+            Type::Int8 => "i8",
+            Type::Int16 => "i16",
+            Type::Int32 => "i32",
+            Type::Int64 => "i64",
+            Type::Int128 => "i128",
+            Type::Float16 => "f16",
+            Type::Float32 => "f32",
+            Type::Float64 => "f64",
+            Type::Float128 => "f128",
+            Type::String => "str",
+            Type::Boolean => "bool",
+            Type::Void => "void",
+            Type::Array(_) => todo!(),
+            Type::UserDefinedType { name } => todo!(),
+        }
+    }
 }
-
-
