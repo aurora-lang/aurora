@@ -10,3 +10,4 @@ debug = []
 regex = "1.7.3"
 serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.96"
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm14-0"] }

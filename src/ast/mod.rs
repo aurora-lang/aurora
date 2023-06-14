@@ -29,8 +29,8 @@ pub enum Type {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Program {
-    statements: Vec<statements::Statements>,
-    exports: Vec<Export>,
+    pub statements: Vec<statements::Statements>,
+    pub exports: Vec<Export>,
 }
 
 impl Program {

@@ -36,19 +36,27 @@ impl Parser {
         let mut block: Vec<Statements> = vec![];
 
         loop {
-            let curr_token = self.lexer.next_token();
+            let mut curr_token = self.lexer.next_token();
 
             if matches!(curr_token, Token::Whitespace) {
-                self.lexer.next_token();
+                curr_token = self.lexer.next_token();
+            }
+
+            if matches!(curr_token, Token::End) {
+                break;
             }
 
             if matches!(self.lexer.peak_next_token(), Token::End) {
+                self.lexer.next_token();
                 break;
             }
 
             match self.parse_statement() {
                 Ok(statement) => block.push(statement),
-                Err(e) => panic!("{e}"),
+                Err(e) => {
+                    println!("{}", print_error(&e, &self.lexer));
+                    return block;
+                },
             }
         }
 
@@ -200,6 +208,12 @@ impl Parser {
             };
 
             let body = self.parse_block();
+
+            // if !matches!(self.lexer.next_token(), Token::End) {
+            //     return Err(print_error("error", &self.lexer));
+            // }
+
+            self.lexer.next_token();
 
             let func = Statements::FunctionDeclaration {
                 name: id,

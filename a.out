@@ -2,58 +2,31 @@
   "statements": [
     {
       "FunctionDeclaration": {
-        "name": "main",
-        "params": [],
+        "name": "add",
+        "params": [
+          {
+            "name": "x",
+            "type": "Int32"
+          },
+          {
+            "name": "y",
+            "type": "Int32"
+          }
+        ],
         "body": [
           {
-            "VariableDeclaration": {
-              "name": "app",
-              "value": {
-                "FunctionCall": {
-                  "name": "createapp",
-                  "params": []
-                }
-              },
-              "type": {
-                "UserDefinedType": {
-                  "name": "App"
+            "ExpressionStatement": {
+              "expr": {
+                "Identifier": {
+                  "val": "x"
                 }
               }
             }
           }
         ],
-        "return_type": "Void"
+        "return_type": "Int32"
       }
     }
   ],
-  "exports": [
-    {
-      "type": "Function",
-      "statement": {
-        "FunctionDeclaration": {
-          "name": "main",
-          "params": [],
-          "body": [
-            {
-              "VariableDeclaration": {
-                "name": "app",
-                "value": {
-                  "FunctionCall": {
-                    "name": "createapp",
-                    "params": []
-                  }
-                },
-                "type": {
-                  "UserDefinedType": {
-                    "name": "App"
-                  }
-                }
-              }
-            }
-          ],
-          "return_type": "Void"
-        }
-      }
-    }
-  ]
+  "exports": []
 }
